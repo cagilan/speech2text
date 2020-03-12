@@ -1,0 +1,134 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>Speech2Text</title>
+
+  <link rel="stylesheet" href="../bower_components/ing-uif-styles/assets/css/global.css">
+  <style>
+    body {
+      margin: 24px;
+    }
+
+    .results-container {
+      border: 1px solid #d9d9d9;
+      width: 50%;
+      padding: 20px;
+      margin: auto;
+      margin-top: 20px;
+    }
+
+    .separator {
+      border-top: 1px solid #d9d9d9;
+      width: 100%;
+    }
+
+    .results-container--align {
+      width: 50%;
+      margin: auto;
+      padding-bottom: 20px
+    }
+
+    .buttons-wrapper {
+      width: 50%;
+      margin: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div">
+
+    <article>
+      <h2 id="dialog" style="position: relative">Speech2Text Demo</h2>
+      <p>This is Web Speech API example</p>
+
+      <demo-snippet>
+        <div>Transcription:</div>
+        <br />
+        <textarea id="transcription" readonly="readonly" rows="5" cols="300"></textarea>
+        <div id="transcriptConfidentElement"></div>
+        <div class="results-container">
+          <div class="results-container--align">
+            <span>Results:</span>
+            <label><input type="radio" name="recognition-type" value="final" checked="checked" /> Final only</label>
+            <label><input type="radio" name="recognition-type" value="interim" /> Interim</label>
+          </div>
+          <div class="separator"></div>
+          <div class="buttons-wrapper">
+            <button id="button-play-ws" class="button-demo">Play demo</button>
+            <button id="button-stop-ws" class="button-demo">Stop demo</button>
+            <button id="clear-all" class="button-demo">Clear all</button>
+          </div>
+        </div>
+      </demo-snippet>
+    </article>
+
+    <script>
+      window.SpeechRecognition = window.SpeechRecognition ||
+        window.webkitSpeechRecognition ||
+        null;
+
+      if (window.SpeechRecognition === null) {
+        document.getElementById('ws-unsupported').classList.remove('hidden');
+        document.getElementById('button-play-ws').setAttribute('disabled', 'disabled');
+        document.getElementById('button-stop-ws').setAttribute('disabled', 'disabled');
+      } else {
+        var recognizer = new window.SpeechRecognition();
+        var transcription = document.getElementById('transcription');
+        var transcriptConfidentElement = document.getElementById('transcriptConfidentElement');
+        var log = document.getElementById('log');
+
+        // Recogniser doesn't stop listening even if the user pauses
+        recognizer.continuous = true;
+
+        // Start recognising
+        recognizer.onresult = function (event) {
+          transcription.textContent = '';
+
+          for (var i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+              transcription.textContent = event.results[i][0].transcript;
+              transcriptConfidentElement.textContent = 'Confidence Score: ' + event.results[i][0].confidence;
+            } else {
+              transcription.textContent += event.results[i][0].transcript;
+            }
+          }
+        };
+
+        // Listen for errors
+        recognizer.onerror = function (event) {
+          log.innerHTML = 'Recognition error: ' + event.message + '<br />' + log.innerHTML;
+        };
+
+        document.getElementById('button-play-ws').addEventListener('click', function () {
+          // Set if we need interim results
+          recognizer.interimResults = document.querySelector('input[name="recognition-type"][value="interim"]').checked;
+
+          try {
+            recognizer.start();
+            log.innerHTML = 'Recognition started' + '<br />' + log.innerHTML;
+          } catch (ex) {
+            log.innerHTML = 'Recognition error: ' + ex.message + '<br />' + log.innerHTML;
+          }
+        });
+
+        document.getElementById('button-stop-ws').addEventListener('click', function () {
+          recognizer.stop();
+          log.innerHTML = 'Recognition stopped' + '<br />' + log.innerHTML;
+        });
+
+        document.getElementById('clear-all').addEventListener('click', function () {
+          transcription.textContent = '';
+          log.textContent = '';
+        });
+      }
+    </script>
+    </article>
+    </div>
+</body>
+
+</html>
